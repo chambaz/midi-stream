@@ -7,7 +7,7 @@
         * {
           box-sizing: border-box;
         }
-        
+
         body,
         html {
           width: 100%;
@@ -39,14 +39,16 @@
         <script src='/socket.io/socket.io.js'></script>
         <script>
             var socket = io();
-            var ID = 0;
+            var clientID = 0;
 
+            // emit 'midi' message on button click and send socket client ID
             document.querySelector('[data-midi-send]').addEventListener('click', function() {
-              socket.emit('midi', {data: 'MIDI!', id: ID});
+              socket.emit('midi', {id: clientID});
             })
 
+            // on welcome message store unique client ID
             socket.on('welcome', function(data) {
-                ID = data.id;
+                clientID = data.id;
             });
         </script>
     </body>

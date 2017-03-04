@@ -6,6 +6,7 @@
   "author": "@chambaz",
   "license": "ISC",
   "dependencies": {
+    "midi": "^0.9.5",
     "socket.io": "^1.7.3"
   }
 }

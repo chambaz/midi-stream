@@ -1,0 +1,11 @@
+{
+  "name": "midi-stream",
+  "version": "0.0.0",
+  "description": "Send MIDI signals over sockets",
+  "main": "index.js",
+  "author": "@chambaz",
+  "license": "ISC",
+  "dependencies": {
+    "socket.io": "^1.7.3"
+  }
+}

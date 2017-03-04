@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+    <head>
+      <title>MIDI Stream</title>
+    </head>
+    <body>
+        <button data-midi-send style="padding: 20px; font-size: 60px">Send MIDI Signal</button>
+        <ul id='messages'></ul>
+
+        <script src='/socket.io/socket.io.js'></script>
+        <script>
+            var socket = io();
+            var ID = 0;
+
+            document.querySelector('[data-midi-send]').addEventListener('click', function() {
+              socket.emit('midi', {data: 'MIDI!', id: ID});
+            })
+
+            socket.on('welcome', function(data) {
+                ID = data.id;
+            });
+        </script>
+    </body>
+</html>

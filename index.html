@@ -18,38 +18,82 @@
 
         .container {
           display: flex;
+          flex-direction: column;
           height: 100%;
           width: 100%;
-          padding: 20px;
         }
 
         .btn {
-          padding: 20px;
-          font-size: 22px;
-          margin: auto;
+          background: #eee;
+          cursor: pointer;
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           text-transform: uppercase;
+          font-weight: bold;
+          font-size: 40px;
+          font-family: Helvetica;
+          text-align: center;
+          border-top: solid 2px #aaa;
+        }
+
+        .btn:first-child {
+          border-top: 0;
+        }
+
+        @media (min-width: 1000px) {
+          .container {
+            flex-direction: row;
+          }
+
+          .btn {
+            border-top: 0;
+            border-left: solid 2px #aaa;
+          }
+
+          .btn:first-child {
+            border-left: 0;
+          }
         }
       </style>
     </head>
     <body>
       <div class="container">
-        <button data-midi-send class="btn">Send MIDI Signal</button>
+        <div data-midi-send="1" class="btn">
+          Send MIDI Signal
+        </div>
+        <div data-midi-send="2" class="btn">
+          Send MIDI Signal
+        </div>
+        <div data-midi-send="3" class="btn">
+          Send MIDI Signal
+        </div>
+        <div data-midi-send="4" class="btn">
+          Send MIDI Signal
+        </div>
       </div>
 
         <script src='/socket.io/socket.io.js'></script>
         <script>
-            var socket = io();
-            var clientID = 0;
+            var socket = io()
+            var clientID = 0
+            var btns = document.querySelectorAll('[data-midi-send]')
 
             // emit 'midi' message on button click and send socket client ID
-            document.querySelector('[data-midi-send]').addEventListener('click', function() {
-              socket.emit('midi', {id: clientID});
+            btns.forEach(btn => {
+              btn.addEventListener('click', (e) => {
+                socket.emit('midi', {
+                  note: e.currentTarget.getAttribute('data-midi-send'),
+                  id: clientID
+                })
+              })
             })
 
             // on welcome message store unique client ID
-            socket.on('welcome', function(data) {
-                clientID = data.id;
-            });
+            socket.on('welcome', data => {
+              clientID = data.id;
+            })
         </script>
     </body>
 </html>

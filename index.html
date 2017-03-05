@@ -2,23 +2,141 @@
 <html>
     <head>
       <title>MIDI Stream</title>
+
+      <style>
+        * {
+          box-sizing: border-box;
+        }
+
+        body,
+        html {
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          padding: 0;
+        }
+
+        .container {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          width: 100%;
+        }
+
+        .btn {
+          background: #eee;
+          cursor: pointer;
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-transform: uppercase;
+          font-weight: bold;
+          font-size: 40px;
+          font-family: Helvetica;
+          text-align: center;
+          border-top: solid 2px #aaa;
+          transition: .3s;
+        }
+
+        .btn:hover {
+          background: #ddd;
+        }
+
+        .btn:first-child {
+          border-top: 0;
+        }
+
+        @media (min-width: 1000px) {
+          .container {
+            flex-direction: row;
+          }
+
+          .btn {
+            border-top: 0;
+            border-left: solid 2px #aaa;
+          }
+
+          .btn:first-child {
+            border-left: 0;
+          }
+        }
+      </style>
     </head>
     <body>
-        <button data-midi-send style="padding: 20px; font-size: 60px">Send MIDI Signal</button>
-        <ul id='messages'></ul>
+      <div class="container">
+        <div data-midi-send="1" class="btn">
+          Send MIDI Signal
+        </div>
+        <div data-midi-send="2" class="btn">
+          Send MIDI Signal
+        </div>
+        <div data-midi-send="3" class="btn">
+          Send MIDI Signal
+        </div>
+        <div data-midi-send="4" class="btn">
+          Send MIDI Signal
+        </div>
+      </div>
 
         <script src='/socket.io/socket.io.js'></script>
         <script>
-            var socket = io();
-            var ID = 0;
+            const socket = io()
+            const btns = document.querySelectorAll('[data-midi-send]')
+            const notes = [
+              [144,60,100],
+              [144,62,100],
+              [144,64,100],
+              [144,65,100]
+            ]
+            let clientID = 0
 
-            document.querySelector('[data-midi-send]').addEventListener('click', function() {
-              socket.emit('midi', {data: 'MIDI!', id: ID});
+            // emit 'midi' message on button click and send socket client ID
+            btns.forEach(btn => {
+              btn.addEventListener('click', (e) => {
+                socket.emit('midi', {
+                  msg: notes[Number(e.currentTarget.getAttribute('data-midi-send')) - 1],
+                  id: clientID
+                })
+              })
             })
 
-            socket.on('welcome', function(data) {
-                ID = data.id;
-            });
+            // on welcome message store unique client ID
+            socket.on('welcome', data => {
+              clientID = data.id;
+            })
+
+            // initialize WebMIDI
+            if (navigator.requestMIDIAccess) {
+              navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+            }
+
+            // set up onmidimessage event handler
+            function onMIDISuccess(midiAccess) {
+              midi = midiAccess;
+
+              const inputs = midi.inputs.values();
+
+              for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
+                if (input.value.name !== 'MIDI Stream Output') {
+                  input.value.onmidimessage = onMIDIMessage;
+                }
+              }
+            }
+
+            // no MIDI available :(
+            function onMIDIFailure() {
+              console.log('No MIDI')
+            }
+
+            // MIDI message received so pipe over socket
+            function onMIDIMessage(message) {
+              console.log('MIDI data', message.data); // MIDI data [144, 63, 73]
+              socket.emit('midi', {
+                msg: message.data,
+                id: clientID
+              })
+            }
         </script>
     </body>
 </html>

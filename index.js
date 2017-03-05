@@ -1,23 +1,33 @@
-var http = require('http'),
-  fs = require('fs'),
-    // NEVER use a Sync function except at start-up!
-  index = fs.readFileSync(__dirname + '/index.html')
+const http = require('http')
+const fs = require('fs')
+const index = fs.readFileSync(__dirname + '/index.html')
+const midi = require('midi')
 
-// Send index.html to all requests
-var app = http.createServer(function(req, res) {
+// serve up index.html
+const app = http.createServer(function(req, res) {
   res.writeHead(200, {'Content-Type': 'text/html'})
   res.end(index)
 })
 
-// Socket.io server listens to our app
-var io = require('socket.io').listen(app)
+// start socket.io
+const io = require('socket.io').listen(app)
 
-// Emit welcome message on connection
-io.on('connection', function(socket) {
-    // Use socket to communicate with this particular client only, sending it it's own id
+// create MIDI output and open virtual port for outside connections
+const midiOutput = new midi.output()
+midiOutput.openVirtualPort('MIDI Stream Output')
+
+// on socket connection
+io.on('connection', socket => {
+  // send welcome message with unique ID
   socket.emit('welcome', { message: 'Welcome!', id: socket.id })
 
-  socket.on('midi', console.log)
+  // on 'midi' socket message send MIDI message to virtual output
+  socket.on('midi', data => {
+    console.log('trigger', data)
+    if (data.msg) {
+      midiOutput.sendMessage([data.msg['0'], data.msg['1'], data.msg['2']])
+    }
+  })
 })
 
 app.listen(3000)

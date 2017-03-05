@@ -83,13 +83,19 @@
         <script>
             const socket = io()
             const btns = document.querySelectorAll('[data-midi-send]')
+            const notes = [
+              [144,60,100],
+              [144,62,100],
+              [144,64,100],
+              [144,65,100]
+            ]
             let clientID = 0
 
             // emit 'midi' message on button click and send socket client ID
             btns.forEach(btn => {
               btn.addEventListener('click', (e) => {
                 socket.emit('midi', {
-                  note: e.currentTarget.getAttribute('data-midi-send'),
+                  msg: notes[Number(e.currentTarget.getAttribute('data-midi-send')) - 1],
                   id: clientID
                 })
               })

@@ -76,9 +76,9 @@
 
         <script src='/socket.io/socket.io.js'></script>
         <script>
-            var socket = io()
-            var clientID = 0
-            var btns = document.querySelectorAll('[data-midi-send]')
+            const socket = io()
+            const btns = document.querySelectorAll('[data-midi-send]')
+            let clientID = 0
 
             // emit 'midi' message on button click and send socket client ID
             btns.forEach(btn => {
@@ -94,6 +94,38 @@
             socket.on('welcome', data => {
               clientID = data.id;
             })
+
+            // initialize WebMIDI
+            if (navigator.requestMIDIAccess) {
+              navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+            }
+
+            // set up onmidimessage event handler
+            function onMIDISuccess(midiAccess) {
+              midi = midiAccess;
+
+              const inputs = midi.inputs.values();
+
+              for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
+                if (input.value.name !== 'MIDI Stream Output') {
+                  input.value.onmidimessage = onMIDIMessage;
+                }
+              }
+            }
+
+            // no MIDI available :(
+            function onMIDIFailure() {
+              console.log('No MIDI')
+            }
+
+            // MIDI message received so pipe over socket
+            function onMIDIMessage(message) {
+              console.log('MIDI data', message.data); // MIDI data [144, 63, 73]
+              socket.emit('midi', {
+                msg: message.data,
+                id: clientID
+              })
+            }
         </script>
     </body>
 </html>

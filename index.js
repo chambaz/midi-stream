@@ -31,7 +31,15 @@ io.on('connection', socket => {
   // on 'midi' socket message send MIDI message to virtual output
   socket.on('midi', data => {
     console.log('trigger', data)
-    midiOutput.sendMessage(notes[Number(data.note) - 1])
+
+    // if full MIDI message available then send
+    if (data.msg) {
+      midiOutput.sendMessage([data.msg['0'], data.msg['1'], data.msg['2']])
+
+    // else pick a note to send
+    } else if (data.note) {
+      midiOutput.sendMessage(notes[Number(data.note) - 1])
+    }
   })
 })
 
